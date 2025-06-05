@@ -60,8 +60,10 @@
             chooseYearBtn.addEventListener("click", () => {
                 const input = prompt("Enter the year (e.g. 2023):");
                 const year = parseInt(input);
-                // if (!isNaN(year) && year >= 2020 && year <= 2025) {
-                if (!isNaN(year)) {
+
+                if (!isNaN(year) && year >= 2020 && year <= 2025) {
+                // if (!isNaN(year)) {                                      <- TO Allow any date after like 1980; basically after the creation of git
+                                                                            // <- It  is commented because it will mess your profile page up a bit, the commit history dates will overflow
                     currentYear = year;
                     currentYearLabel.innerHTML = year;
                     drawGraph(currentYear);
