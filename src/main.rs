@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use serde::Deserialize;
 use tiny_http::{Response, Server};
 
@@ -19,6 +21,20 @@ fn main() {
             match serde_json::from_str::<Payload>(&content) {
                 Ok(data) => {
                     println!("Got {:#?}", data.dates);
+                    for date in data.dates {
+                        let date_str = format!("{date}T12:00:00");
+                        let cmd = format!(
+                            "GIT_AUTHOR_DATE=\"{0}\" GIT_COMMITTER_DATE=\"{0}\" git commit --allow-empty -m \"PS-Wizard\"",
+                            date_str
+                        );
+                        let _ = Command::new("sh")
+                            .arg("-c")
+                            .arg(cmd)
+                            .status()
+                            .expect("failed to execute commit");
+                        println!("Made Commit for: {date}");
+                    }
+
                     let response = Response::from_string("Success: You May Push To Github Now!")
                         .with_status_code(200);
                     let _ = request.respond(response);
