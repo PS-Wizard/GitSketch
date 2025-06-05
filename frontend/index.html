@@ -60,7 +60,8 @@
             chooseYearBtn.addEventListener("click", () => {
                 const input = prompt("Enter the year (e.g. 2023):");
                 const year = parseInt(input);
-                if (!isNaN(year) && year >= 2020 && year <= 2025) {
+                // if (!isNaN(year) && year >= 2020 && year <= 2025) {
+                if (!isNaN(year)) {
                     currentYear = year;
                     currentYearLabel.innerHTML = year;
                     drawGraph(currentYear);
@@ -150,8 +151,28 @@
                 lastToggled = null;
             });
 
-            submitBtn.addEventListener("click", () => {
-                console.log(JSON.stringify([...selectedDates]));
+            submitBtn.addEventListener("click", async () => {
+                const payload = {
+                    dates: [...selectedDates]
+                };
+                try {
+                    const res = await fetch("http://0.0.0.0:8080/submit",{
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    console.log(res);
+                    if (res.ok) {
+                        alert("Success!, You may push to github now!");
+                    }else{
+                        console.err(res);
+                    }
+                } catch (err){
+                    alert("Failed! please check the console.");
+                    console.log(err);
+                }
             });
 
             drawGraph(currentYear);

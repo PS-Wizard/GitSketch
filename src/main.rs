@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use serde::Deserialize;
-use tiny_http::{Response, Server};
+use tiny_http::{Header, Method, Response, Server};
 
 #[derive(Deserialize, Debug)]
 
@@ -32,11 +32,24 @@ fn main() {
                             .arg(cmd)
                             .status()
                             .expect("failed to execute commit");
-                        println!("Made Commit for: {date}");
                     }
 
-                    let response = Response::from_string("Success: You May Push To Github Now!")
+                    let response = Response::from_string("OK")
+                        .with_header(
+                            Header::from_bytes("Access-Control-Allow-Origin", "*").unwrap(),
+                        )
+                        .with_header(
+                            Header::from_bytes("Access-Control-Allow-Headers", "*").unwrap(),
+                        )
+                        .with_header(
+                            Header::from_bytes(
+                                "Access-Control-Allow-Methods",
+                                "POST, GET, OPTIONS",
+                            )
+                            .unwrap(),
+                        )
                         .with_status_code(200);
+
                     let _ = request.respond(response);
                 }
                 Err(e) => {
@@ -45,6 +58,16 @@ fn main() {
                     let _ = request.respond(response);
                 }
             }
+        } else if request.method() == &Method::Options {
+            let response = Response::empty(200)
+                .with_header(Header::from_bytes("Access-Control-Allow-Origin", "*").unwrap())
+                .with_header(
+                    Header::from_bytes("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+                        .unwrap(),
+                )
+                .with_header(Header::from_bytes("Access-Control-Allow-Headers", "*").unwrap());
+            let _ = request.respond(response);
+            continue;
         } else {
             let response =
                 Response::from_string("Only POST to /submit Works: {}").with_status_code(404);
