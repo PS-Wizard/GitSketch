@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dim">
+    <head>
+        <meta charset="UTF-8">
+        <title>GitHub Contribution Grid</title>
+        <link rel="stylesheet" href="./output.css" />
+        <script src="https://unpkg.com/lucide@latest"></script>
+    </head>
+
+    <body class="h-[100vh] w-screen flex flex-col justify-between p-4 pt-10">
+        <div class="navbar bg-transparent flex justify-center items-center">
+            <p class="font-bold text-lg"> You are currently drawing on: <span class="text-error underline" id="currentDrawingYear"> 2025 </span> </p>
+        </div>
+        <div class="justify-center flex items-center flex-col h-[80vh] w-full border rounded-full border-base-100">
+            <div class="flex gap-2 flex-col">
+                <div class="graph border m-4 p-4 rounded-lg border-base-100" id="graph"></div>
+                <div class="flex w-full justify-center items-center gap-4">
+                    <button id="reset" class="btn btn-error" onclick="location.reload()">Reset</button>
+                    <button id="chooseYear" class="btn btn-info"> Choose Year </button>
+                    <button id="submit" class="btn btn-success">Submit</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar bg-transparent ">
+            <div class="flex-1 flex items-center gap-2">
+                <div class="avatar">
+                    <div class="w-10 rounded-full">
+                        <img src="https://avatars.githubusercontent.com/u/189609576?v=4" />
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 justify-center items-center">
+                <div class="tooltip tooltip-bottom" data-tip="checkout my github">
+                    <a href="https://github.com/PS-Wizard" target="_blank" class="btn btn-sm btn-ghost">
+                        <i data-lucide="github" class="w-5 h-5"></i>
+                    </a>
+                </div>
+
+                <div class="tooltip tooltip-bottom" data-tip="connect on linkedin!">
+                    <a href="https://www.linkedin.com/in/swoyam-pokharel-557779340/" target="_blank" class="btn btn-sm btn-ghost">
+                        <i data-lucide="linkedin" class="w-5 h-5"></i>
+                    </a>
+                </div>
+
+                <div class="tooltip tooltip-left" data-tip="View This Project On Github">
+                    <button class="btn btn-primary bg-white text-black btn-sm border-white flex justify-center items-center" onclick="window.open('https://github.com/PS-Wizard/GitSketch/', '_blank')"> GitSketch <i data-lucide="external-link" class="w-4 h-4"></i> </button>
+                </div>
+            </div>
+
+        </div>
+        <script>
+
+            lucide.createIcons();
+            const graph = document.getElementById("graph");
+            const chooseYearBtn = document.getElementById("chooseYear");
+            const currentYearLabel = document.getElementById("currentDrawingYear");
+            let currentYear = 2025; 
+
+            chooseYearBtn.addEventListener("click", () => {
+                const input = prompt("Enter the year (e.g. 2023):");
+                const year = parseInt(input);
+                if (!isNaN(year) && year >= 2020 && year <= 2025) {
+                    currentYear = year;
+                    currentYearLabel.innerHTML = year;
+                    drawGraph(currentYear);
+                } else {
+                    alert("Please enter a valid year between 2020 and 2025.");
+                }
+            });
+            const submitBtn = document.getElementById("submit");
+
+            let selectedDates = new Set();
+
+            let isMouseDown = false;
+            let toggleMode = null; // true for selecting, false for deselecting
+            let lastToggled = null;
+
+            function toggleDay(dayDiv) {
+                const iso = dayDiv.getAttribute("data-date");
+                if (!iso) return;
+
+                if (toggleMode === null) {
+                    toggleMode = !dayDiv.classList.contains("selected"); // decide if we're selecting or deselecting
+                }
+
+                if (lastToggled === iso) return; // avoid toggling same day repeatedly while dragging
+
+                if (toggleMode) {
+                    selectedDates.add(iso);
+                    dayDiv.classList.add("selected");
+                } else {
+                    selectedDates.delete(iso);
+                    dayDiv.classList.remove("selected");
+                }
+                lastToggled = iso;
+            }
+
+            function drawGraph(year) {
+                graph.innerHTML = "";
+                selectedDates.clear();
+
+                const startDate = new Date(year, 0, 1) - 1;
+                const endDate = new Date(year, 11, 31);
+
+                let date = new Date(startDate);
+                date.setDate(date.getDate() - date.getDay());
+
+                while (date <= endDate) {
+                    const week = document.createElement("div");
+                    week.className = "week";
+
+                    for (let i = 0; i < 7; i++) {
+                        const day = document.createElement("div");
+                        day.className = "day";
+
+                        const iso = date.toISOString().split('T')[0];
+
+                        if (date.getFullYear() === year) {
+                            day.setAttribute("data-date", iso);
+                            day.title = iso;
+
+                            day.addEventListener("mousedown", (e) => {
+                                e.preventDefault();
+                                isMouseDown = true;
+                                toggleMode = !day.classList.contains("selected");
+                                toggleDay(day);
+                            });
+
+                            day.addEventListener("mouseenter", () => {
+                                if (isMouseDown) {
+                                    toggleDay(day);
+                                }
+                            });
+                        } else {
+                            day.style.visibility = "hidden";
+                        }
+
+                        week.appendChild(day);
+                        date.setDate(date.getDate() + 1);
+                    }
+
+                    graph.appendChild(week);
+                }
+            }
+
+            document.body.addEventListener("mouseup", () => {
+                isMouseDown = false;
+                toggleMode = null;
+                lastToggled = null;
+            });
+
+            submitBtn.addEventListener("click", () => {
+                console.log(JSON.stringify([...selectedDates]));
+            });
+
+            drawGraph(currentYear);
+
+        </script>
+    </body>
+</html>
